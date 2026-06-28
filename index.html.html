@@ -48,7 +48,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div class="bg-gradient-to-br from-indigo-600 to-blue-600 rounded-2xl p-6 shadow-xl">
-                <h3 class="text-indigo-100 text-sm font-medium mb-1"><span id="txt-filter-label-1">우리 부부</span> 순자산 (자산-부채)</h3>
+                <h3 class="text-indigo-100 text-sm font-medium mb-1"><span id="txt-filter-label-1">우리 부부</span> 순자산</h3>
                 <div class="text-3xl font-bold tracking-tight text-white mb-2" id="txt-net-asset">0원</div>
                 <p class="text-xs text-indigo-200 flex items-center gap-1 font-semibold" id="txt-mom-change">조회 중...</p>
             </div>
@@ -56,19 +56,19 @@
             <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-md">
                 <h3 class="text-emerald-400 text-sm font-medium mb-1">🟢 <span id="txt-filter-label-2">전체</span> 총자산</h3>
                 <div class="text-2xl font-bold tracking-tight text-emerald-400 mb-2" id="txt-total-asset">0원</div>
-                <div class="text-xs text-slate-400" id="txt-growth-percent">최초 결산 대비 성장 포함</div>
+                <div class="text-xs text-slate-400" id="txt-growth-percent">성장액 실시간 반영</div>
             </div>
 
             <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-md">
                 <h3 class="text-rose-400 text-sm font-medium mb-1">🔴 <span id="txt-filter-label-3">전체</span> 총부채</h3>
                 <div class="text-2xl font-bold tracking-tight text-rose-400 mb-2" id="txt-total-liability">0원</div>
-                <div class="text-xs text-slate-400">갚아야 할 대출 및 상환 항목</div>
+                <div class="text-xs text-slate-400">상환 필요한 대출 항목</div>
             </div>
 
             <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-md">
-                <h3 class="text-amber-400 text-sm font-medium mb-1">💵 자산 달러 가치 (외화)</h3>
+                <h3 class="text-amber-400 text-sm font-medium mb-1">💵 자산 달러 가치</h3>
                 <div class="text-2xl font-bold tracking-tight text-amber-400 mb-2" id="txt-usd-net-asset">$0</div>
-                <div class="text-xs text-slate-400" id="txt-usd-growth-percent">순자산 달러 기준 증가율</div>
+                <div class="text-xs text-slate-400" id="txt-usd-growth-percent">순자산 환산 기준</div>
             </div>
         </div>
 
@@ -123,8 +123,7 @@
                         </div>
                     </div>
 
-                    <div id="closing-dynamic-fields" class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-                        </div>
+                    <div id="closing-dynamic-fields" class="space-y-3 max-h-[400px] overflow-y-auto pr-2"></div>
 
                     <div class="pt-2">
                         <button onclick="submitMonthlyClosing()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition shadow-lg flex items-center justify-center gap-2 cursor-pointer">
@@ -142,20 +141,29 @@
             <div class="lg:col-span-5 space-y-6">
                 <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-md">
                     <h3 class="text-slate-200 font-semibold text-base mb-2">⚙️ [기본 셋업] 우리집 고정 품목 등록</h3>
-                    <p class="text-xs text-slate-400 mb-4">자산/부채의 이름과 소유자를 최초 1회 등록해두는 곳입니다.</p>
+                    <p class="text-xs text-slate-400 mb-4">자산의 구분을 명확히 선택하시면 차트 분석이 정교해집니다.</p>
                     
                     <div class="space-y-3 text-xs">
-                        <div class="grid grid-cols-2 gap-2">
+                        <div class="grid grid-cols-3 gap-2">
                             <div>
-                                <label class="block text-slate-400 mb-1">구분</label>
-                                <select id="form-type" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200">
+                                <label class="block text-slate-400 mb-1">유형</label>
+                                <select id="form-type" onchange="toggleCategorySelect()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none">
                                     <option value="asset">자산 (+)</option>
                                     <option value="liability">부채 (-)</option>
                                 </select>
                             </div>
                             <div>
+                                <label class="block text-slate-400 mb-1">상세 분류</label>
+                                <select id="form-category" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none">
+                                    <option value="부동산">🏢 부동산</option>
+                                    <option value="주식">📈 주식군</option>
+                                    <option value="코인">🪙 코인군</option>
+                                    <option value="현금/예적금">💵 현금/예적금</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label class="block text-slate-400 mb-1">소유자</label>
-                                <select id="form-owner" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200">
+                                <select id="form-owner" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none">
                                     <option value="공동">👥 공동</option>
                                     <option value="남편">🙋‍♂️ 남편</option>
                                     <option value="아내">🙋‍♀️ 아내</option>
@@ -163,8 +171,8 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-slate-400 mb-1">품목 명칭 (예: 부동산, 미국주식, 연금저축)</label>
-                            <input type="text" id="form-name" placeholder="품목명을 적어주세요" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200">
+                            <label class="block text-slate-400 mb-1">품목 명칭 (예: 신한은행 예금, 토스뱅크, 테슬라주식)</label>
+                            <input type="text" id="form-name" placeholder="구체적인 명칭을 적어주세요" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <button onclick="registerItem()" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg font-medium transition cursor-pointer">
                             ➕ 고정 품목 풀(Pool)에 추가
@@ -178,6 +186,7 @@
                                 <thead>
                                     <tr class="text-slate-500 border-b border-slate-700">
                                         <th class="pb-1">소유자</th>
+                                        <th class="pb-1">분류</th>
                                         <th class="pb-1">품목명</th>
                                         <th class="pb-1 text-center">삭제</th>
                                     </tr>
@@ -224,14 +233,23 @@
             if (data) {
                 state = JSON.parse(data);
                 if (!state.fixedItems) state.fixedItems = [];
+                // 이전 데이터 마이그레이션 (category가 없는 예전 아이템용 보정)
+                state.fixedItems.forEach(item => {
+                    if (!item.category) {
+                        if (item.type === 'liability') item.category = '부채';
+                        else if (item.name.includes('부동산')) item.category = '부동산';
+                        else if (item.name.includes('주식')) item.category = '주식';
+                        else if (item.name.includes('코인')) item.category = '코인';
+                        else item.category = '현금/예적금';
+                    }
+                });
                 if (!state.history) state.history = [];
             } else {
-                // 기본 구조 가이드용 초기 샘플 데이터 제공
                 state.fixedItems = [
-                    { id: "item1", type: 'asset', owner: '공동', name: '🏢 아파트 부동산' },
-                    { id: "item2", type: 'liability', owner: '공동', name: '🚨 은행 주담대' },
-                    { id: "item3", type: 'asset', owner: '남편', name: '🇺🇸 미국주식(S&P/테슬라)' },
-                    { id: "item4", type: 'asset', owner: '아내', name: '🪙 연금저축펀드(배당)' }
+                    { id: "item1", type: 'asset', category: '부동산', owner: '공동', name: '🏢 아파트 부동산' },
+                    { id: "item2", type: 'liability', category: '부채', owner: '공동', name: '🚨 은행 주담대' },
+                    { id: "item3", type: 'asset', category: '주식', owner: '남편', name: '🇺🇸 미국주식(테슬라/엔비디아)' },
+                    { id: "item4", type: 'asset', category: '현금/예적금', owner: '아내', name: '💵 우리은행 비상금통장' }
                 ];
                 state.targetAmounts = { '전체': 1000000000, '공동': 700000000, '남편': 200000000, '아내': 100000000 };
                 state.history = [
@@ -243,14 +261,31 @@
             document.getElementById('input-target-amount').value = state.targetAmounts[currentFilter] || '';
         }
 
+        // 유형 변경 시 부채면 상세분류를 '부채' 고정 처리하는 편의 기능
+        function toggleCategorySelect() {
+            const type = document.getElementById('form-type').value;
+            const catSelect = document.getElementById('form-category');
+            if (type === 'liability') {
+                catSelect.innerHTML = `<option value="부채">🚨 부채 항목</option>`;
+            } else {
+                catSelect.innerHTML = `
+                    <option value="부동산">🏢 부동산</option>
+                    <option value="주식">📈 주식군</option>
+                    <option value="코인">🪙 코인군</option>
+                    <option value="현금/예적금">💵 현금/예적금</option>
+                `;
+            }
+        }
+
         function registerItem() {
             const type = document.getElementById('form-type').value;
+            const category = document.getElementById('form-category').value;
             const owner = document.getElementById('form-owner').value;
             const name = document.getElementById('form-name').value.trim();
 
-            if (!name) { alert('품목 명칭을 정확히 입력해 주세요.'); return; }
+            if (!name) { alert('품목 명칭을 입력해 주세요.'); return; }
 
-            const newItem = { id: 'item_' + Date.now(), type, owner, name };
+            const newItem = { id: 'item_' + Date.now(), type, category, owner, name };
             state.fixedItems.push(newItem);
             
             saveToLocalStorage();
@@ -261,7 +296,7 @@
         }
 
         function deleteMasterItem(id) {
-            if(confirm('이 품목을 삭제하시겠습니까? 과거 결산 기록에 보관된 해당 항목 수치도 함께 제외됩니다.')) {
+            if(confirm('이 품목을 삭제하시겠습니까? 관련 과거 히스토리 수치도 함께 초기화됩니다.')) {
                 state.fixedItems = state.fixedItems.filter(item => item.id !== id);
                 saveToLocalStorage();
                 renderMasterItemsTable();
@@ -295,10 +330,11 @@
                     row.className = "flex items-center justify-between gap-4 text-xs bg-slate-900/40 p-2 rounded-lg border border-slate-800";
                     
                     const sign = item.type === 'asset' ? '🟢' : '🔴';
+                    const catBadge = `[${item.category}]`;
                     row.innerHTML = `
-                        <span class="text-slate-300 font-medium">${sign} ${item.name}</span>
+                        <span class="text-slate-300 font-medium">${sign} <span class="text-slate-500 mr-1">${catBadge}</span>${item.name}</span>
                         <div class="flex items-center gap-1.5">
-                            <input type="number" id="close-input-${item.id}" data-itemid="${item.id}" placeholder="0" class="w-36 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-right text-slate-100 focus:border-indigo-500 outline-none font-semibold">
+                            <input type="number" id="close-input-${item.id}" placeholder="0" class="w-36 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-right text-slate-100 focus:border-indigo-500 outline-none font-semibold">
                             <span class="text-slate-500 text-[11px]">원</span>
                         </div>
                     `;
@@ -360,7 +396,7 @@
 
             const existingIdx = state.history.findIndex(h => h.month === targetMonth);
             if (existingIdx !== -1) {
-                if(!confirm(`${targetMonth} 결산 데이터가 이미 존재합니다. 수정하시겠습니까?`)) return;
+                if(!confirm(`${targetMonth} 결산 데이터를 수정하시겠습니까?`)) return;
                 state.history[existingIdx].itemSnapshots = snapshots;
             } else {
                 state.history.push({ month: targetMonth, itemSnapshots: snapshots });
@@ -369,14 +405,14 @@
             state.history.sort((a,b) => a.month.localeCompare(b.month));
             saveToLocalStorage();
             
-            alert(`${targetMonth} 자산 마감 기록이 정상 저장되었습니다.`);
+            alert(`${targetMonth} 마감 기록이 완료되었습니다.`);
             resetClosingForm();
             updateDashboard();
         }
 
         function deleteHistory(month, event) {
             event.stopPropagation();
-            if(confirm(`${month}의 결산 기록을 영구 삭제하시겠습니까?`)) {
+            if(confirm(`${month} 기록을 영구 삭제하시겠습니까?`)) {
                 state.history = state.history.filter(h => h.month !== month);
                 saveToLocalStorage();
                 updateDashboard();
@@ -384,7 +420,6 @@
             }
         }
 
-        // 연산 및 상단 요약 카드 데이터 출력 변경 엔전
         function updateDashboard() {
             const rate = parseFloat(document.getElementById('input-exchange-rate').value) || 1350;
 
@@ -401,22 +436,22 @@
                     if (currentFilter === '전체' || item.owner === currentFilter) {
                         if (item.type === 'asset') {
                             currentNetAsset += amt;
-                            totalAssetSum += amt; // 총자산 누적
-                            
-                            if(item.name.includes('부동산')) categorySums['부동산'] += amt;
-                            else if(item.name.includes('주식')) categorySums['주식'] += amt;
-                            else if(item.name.includes('코인')) categorySums['코인'] += amt;
-                            else categorySums['현금/예적금'] += amt;
+                            totalAssetSum += amt;
+                            // 매핑 보정 및 카테고리 기반 누적
+                            if(categorySums[item.category] !== undefined) {
+                                categorySums[item.category] += amt;
+                            } else {
+                                categorySums['현금/예적금'] += amt;
+                            }
                         } else {
                             currentNetAsset -= amt;
-                            totalLiabilitySum += amt; // 총부채 누적
+                            totalLiabilitySum += amt;
                             categorySums['부채'] += amt;
                         }
                     }
                 });
             }
 
-            // 실시간 상단 노출 세팅
             document.getElementById('txt-net-asset').innerText = currentNetAsset.toLocaleString() + '원';
             document.getElementById('txt-total-asset').innerText = totalAssetSum.toLocaleString() + '원';
             document.getElementById('txt-total-liability').innerText = totalLiabilitySum.toLocaleString() + '원';
@@ -424,7 +459,6 @@
             const usdNetAsset = currentNetAsset / rate;
             document.getElementById('txt-usd-net-asset').innerText = '$' + usdNetAsset.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
-            // 전월비 변동
             const momEl = document.getElementById('txt-mom-change');
             if (state.history.length > 1) {
                 const prevHist = state.history[state.history.length - 2];
@@ -442,7 +476,6 @@
                 momEl.innerText = "비교 데이터 축적 중";
             }
 
-            // 달러 누적 증감 추이 계산 및 서브 텍스트 표기
             if (state.history.length > 0) {
                 const firstHist = state.history[0];
                 let firstNet = 0;
@@ -460,12 +493,8 @@
                 const assetGrowth = totalAssetSum - firstNet;
                 const assetPct = firstNet > 0 ? ((assetGrowth / firstNet) * 100).toFixed(1) : 0;
                 document.getElementById('txt-growth-percent').innerText = `최초 자산 대비 변동: ${assetPct > 0 ? '+' : ''}${assetPct}%`;
-            } else {
-                document.getElementById('txt-usd-growth-percent').innerText = "환율 연동 기준";
-                document.getElementById('txt-growth-percent').innerText = "히스토리 기준";
             }
 
-            // 목표 달성바
             const curTarget = state.targetAmounts[currentFilter] || 0;
             document.getElementById('lbl-target-amount').innerText = curTarget > 0 ? curTarget.toLocaleString() + '원' : '미설정';
             if (curTarget > 0) {
@@ -493,8 +522,9 @@
                 const typeText = item.type === 'asset' ? '➕ 자산' : '➖ 부채';
                 tr.innerHTML = `
                     <td class="py-2"><span class="px-1.5 py-0.5 rounded text-[10px] ${badgeColor}">${item.owner}</span></td>
-                    <td class="py-2 font-medium text-slate-200">${item.name} <span class="text-[10px] text-slate-500">(${typeText})</span></td>
-                    <td class="py-2 text-center"><button onclick="deleteMasterItem('${item.id}')" class="text-slate-500 hover:text-rose-400 transition font-bold cursor-pointer">✕</button></td>
+                    <td class="py-2 text-[11px] font-bold text-slate-400">${item.category}</td>
+                    <td class="py-2 font-medium text-slate-200">${item.name}</td>
+                    <td class="py-2 text-center"><button onclick="deleteMasterItem('${item.id}')" class="text-slate-500 hover:text-rose-400 font-bold cursor-pointer">✕</button></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -504,7 +534,7 @@
             const container = document.getElementById('history-log-list');
             container.innerHTML = '';
             if(state.history.length === 0) {
-                container.innerHTML = `<p class="text-slate-500 italic text-xs col-span-2">확정 기록이 아직 없습니다.</p>`;
+                container.innerHTML = `<p class="text-slate-500 italic text-xs col-span-2">확정 기록이 없습니다.</p>`;
                 return;
             }
 
@@ -595,7 +625,7 @@
 
             const legendsEl = document.getElementById('chart-legends');
             legendsEl.innerHTML = '';
-            const labels = ['🏢 부동산', '📈 주식군', '🪙 코인군', '💵 현금/기타', '🚨 총부채'];
+            const labels = ['🏢 부동산', '📈 주식군', '🪙 코인군', '💵 현금/예적금', '🚨 총부채'];
             const bgColors = ['bg-blue-500', 'bg-emerald-500', 'bg-amber-500', 'bg-indigo-500', 'bg-rose-500'];
 
             const grandTotal = totalAsset + totalLiability;
@@ -649,7 +679,7 @@
                     if (importedState && importedState.fixedItems) {
                         state = importedState; saveToLocalStorage();
                         resetClosingForm(); updateDashboard();
-                        alert('자산 구조 및 히스토리 복구가 정상 완료되었습니다.');
+                        alert('자산 분류 체계 및 데이터가 완벽하게 동기화되었습니다.');
                     } else { alert('유효한 백업 파일이 아닙니다.'); }
                 } catch (e) { alert('파일 읽기 오류'); }
             };
