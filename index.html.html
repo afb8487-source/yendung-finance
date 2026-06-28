@@ -610,4 +610,8 @@
                     } else { alert('파일 규격이 올바르지 않습니다.'); }
                 } catch (e) { alert('파일 복구 중 오류가 발생했습니다.'); }
             };
-            if(input.files[0]) reader.readAsText(input
+            if(input.files[0]) reader.readAsText(input.files[0]);
+        }
+    </script>
+</body>
+</html>
