@@ -213,22 +213,21 @@
     </main>
 
     <script>
-        // 현재 날짜 기준 연-월 기본 자동 세팅
+        // 현재 날짜 및 년월 설정
         const now = new Date();
         const currentYearMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
         document.getElementById('input-history-month').value = currentYearMonth;
         document.getElementById('current-date').innerText = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
 
-        // 상태 데이터 모델 (History 필드가 핵심 추가됨)
+        // 상태 데이터 모델
         let state = {
             items: [], 
             currentFilter: '전체',
             targetAmounts: { '전체': 0, '공동': 0, '남편': 0, '아내': 0 },
-            // 월별 결산 이력 배열: { month: '2026-06', netAssets: { '전체': X, '공동': Y... }, totalAssets: {...} }
             history: [] 
         };
 
-        let currentFilter = '전체';
+        let currentFilter = '전체'; // 탭 관리를 위한 변수
         let assetChartInstance = null;
         let trendChartInstance = null;
 
@@ -248,7 +247,6 @@
                 state = JSON.parse(data);
                 if (!state.history) state.history = [];
             } else {
-                // 초기 실행 시 가상 과거 결산 데이터 예시 탑재
                 state.items = [
                     { id: 1, type: 'asset', category: '부동산', owner: '공동', name: '우리집 아파트', amount: 540000000 },
                     { id: 2, type: 'liability', category: '주택담보대출', owner: '공동', name: '은행 주담대', amount: 180000000 },
@@ -256,8 +254,6 @@
                     { id: 4, type: 'asset', category: '현금/예적금', owner: '아내', name: '정기예금', amount: 35000000 }
                 ];
                 state.targetAmounts = { '전체': 1000000000, '공동': 700000000, '남편': 200000000, '아내': 100000000 };
-                
-                // 과거 3달치 누적 샘플데이터 생성 (그래프 테스트용)
                 state.history = [
                     { month: '2026-03', netAssets: { '전체': 350000000, '공동': 320000000, '남편': 15000000, '아내': 15000000 } },
                     { month: '2026-04', netAssets: { '전체': 370000000, '공동': 330000000, '남편': 20000000, '아내': 20000000 } },
@@ -268,16 +264,20 @@
             document.getElementById('input-target-amount').value = state.targetAmounts[currentFilter] || '';
         }
 
+        // 필터 변경 제어 함수 (수정 완료)
         function setFilter(filterName) {
-            currentFilter = filterName;
+            currentFilter = filterName; // 글로벌 변수 상태 업데이트
+            
             const filters = ['all', 'joint', 'husband', 'wife'];
             const filterKeys = ['전체', '공동', '남편', '아내'];
             
             filterKeys.forEach((key, idx) => {
                 const btn = document.getElementById(`btn-filter-${filters[idx]}`);
-                btn.className = (key === filterName) 
-                    ? "flex-1 py-2 text-sm font-medium rounded-lg transition-all text-white bg-indigo-600 shadow"
-                    : "flex-1 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-slate-200";
+                if (btn) {
+                    btn.className = (key === filterName) 
+                        ? "flex-1 py-2 text-sm font-medium rounded-lg transition-all text-white bg-indigo-600 shadow"
+                        : "flex-1 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-slate-200";
+                }
             });
 
             const labelMap = { '전체': '우리 부부', '공동': '공동명의', '남편': '남편 소유', '아내': '아내 소유' };
@@ -299,7 +299,6 @@
             updateDashboard();
         }
 
-        // 🌟 [핵심 로직] 이번 달 현재 스냅샷을 히스토리에 누적 결산 마감
         function recordMonthlyHistory() {
             const targetMonth = document.getElementById('input-history-month').value.trim();
             if (!/^\d{4}-\d{2}$/.test(targetMonth)) {
@@ -307,7 +306,6 @@
                 return;
             }
 
-            // 현재 전원별 실시간 순자산 계산해오기
             let currentNets = { '전체': 0, '공동': 0, '남편': 0, '아내': 0 };
             state.items.forEach(item => {
                 const amt = item.type === 'asset' ? item.amount : -item.amount;
@@ -315,7 +313,6 @@
                 currentNets[item.owner] += amt;
             });
 
-            // 기존에 동일한 달이 이미 기록되어있다면 덮어쓰기 여부 확인
             const existingIdx = state.history.findIndex(h => h.month === targetMonth);
             if (existingIdx !== -1) {
                 if(!confirm(`${targetMonth} 데이터가 이미 존재합니다. 현재 자산 정보로 덮어쓰시겠습니까?`)) return;
@@ -324,14 +321,12 @@
                 state.history.push({ month: targetMonth, netAssets: currentNets });
             }
 
-            // 달 기준 순정렬
             state.history.sort((a,b) => a.month.localeCompare(b.month));
             saveToLocalStorage();
             updateDashboard();
             alert(`${targetMonth} 결산 기록이 안전하게 저장되었습니다!`);
         }
 
-        // 결산 기록 개별 삭제
         function deleteHistory(month) {
             if(confirm(`${month} 결산 내역을 삭제하시겠습니까?`)) {
                 state.history = state.history.filter(h => h.month !== month);
@@ -374,7 +369,6 @@
             }
         }
 
-        // 전체 화면 업데이트 메인 연산
         function updateDashboard() {
             const filteredItems = state.items.filter(item => currentFilter === '전체' || item.owner === currentFilter);
 
@@ -389,10 +383,8 @@
             document.getElementById('txt-total-liability').innerText = totalLiability.toLocaleString() + '원';
             document.getElementById('txt-net-asset').innerText = netAsset.toLocaleString() + '원';
 
-            // 1. 지난달(직전 결산기록) 대비 증감 연산 처리
             const momEl = document.getElementById('txt-mom-change');
             if (state.history.length > 0) {
-                // 현재 필터링 기준 히스토리에서 가장 최신(마지막) 기록 가져오기
                 const lastHistory = state.history[state.history.length - 1];
                 const lastNet = lastHistory.netAssets[currentFilter] || 0;
                 const diff = netAsset - lastNet;
@@ -408,7 +400,6 @@
                 momEl.innerText = "저장된 이전달 결산 기록 없음";
             }
 
-            // 2. 🌟 누적 자산 상승분 및 누적 수익률 연산
             const growthTxt = document.getElementById('txt-total-growth');
             const growthPctTxt = document.getElementById('txt-growth-percent');
             if (state.history.length > 0) {
@@ -429,7 +420,6 @@
                 growthPctTxt.innerText = "결산 데이터가 적어도 1개 이상 쌓여야 표기됩니다.";
             }
 
-            // 3. 목표 달성률 제어
             const curTarget = state.targetAmounts[currentFilter] || 0;
             document.getElementById('lbl-target-amount').innerText = curTarget > 0 ? curTarget.toLocaleString() + '원' : '미설정';
             if (curTarget > 0) {
@@ -442,10 +432,7 @@
                 document.getElementById('bar-target-progress').style.width = '0%';
             }
 
-            // 4. 하단 히스토리 로그 관리 패널 텍스트 주입
             renderHistoryLog();
-
-            // 5. 리스트 표 & 차트들 갱신
             renderTable(filteredItems);
             updateDoughnutChart(filteredItems, totalAsset, totalLiability);
             updateLineChart();
@@ -485,7 +472,6 @@
                 return;
             }
 
-            // 역순(최신순) 정렬해서 보여주기
             [...state.history].reverse().forEach(h => {
                 const div = document.createElement('div');
                 div.className = "flex items-center justify-between bg-slate-900/60 p-2 rounded-lg border border-slate-700/40";
@@ -500,7 +486,6 @@
             });
         }
 
-        // 차트 스크립트 공간
         function initCharts() {
             const ctxDoughnut = document.getElementById('assetChart').getContext('2d');
             assetChartInstance = new Chart(ctxDoughnut, {
@@ -532,8 +517,11 @@
             if (!assetChartInstance) return;
             let sums = { '부동산': 0, '주식': 0, '코인': 0, '현금/예적금': 0, '부채': 0 };
             filteredItems.forEach(item => {
-                if (item.type === 'asset') sums[item.category] += item.amount;
-                else sums['부채'] += item.amount;
+                if (item.type === 'asset') {
+                    if(sums[item.category] !== undefined) sums[item.category] += item.amount;
+                } else {
+                    sums['부채'] += item.amount;
+                }
             });
 
             const dataArr = [sums['부동산'], sums['주식'], sums['코인'], sums['현금/예적금'], sums['부채']];
@@ -559,15 +547,12 @@
             });
         }
 
-        // 🌟 [새 기능] 선 그래프 히스토리 데이터 실시간 맵핑
         function updateLineChart() {
             if (!trendChartInstance) return;
 
-            // 저장된 기록으로부터 월 리스트 및 특정 필터링 명의의 데이터만 쏙 빼오기
             const labels = state.history.map(h => h.month);
             const data = state.history.map(h => h.netAssets[currentFilter] || 0);
 
-            // 현재 실시간 세팅 상태의 금액도 차트 맨 마지막에 실시간 가상 연결해 보여주기 (현재달 미리보기 효과)
             let curNet = 0;
             state.items.forEach(item => {
                 if (currentFilter === '전체' || item.owner === currentFilter) {
@@ -575,7 +560,6 @@
                 }
             });
             
-            // 현재달이 기록에 없으면 임시 우측 노출
             if (!labels.includes(currentYearMonth)) {
                 labels.push(currentYearMonth + ' (현재)');
                 data.push(curNet);
