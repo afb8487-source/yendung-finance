@@ -56,7 +56,7 @@
             <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-md">
                 <h3 class="text-emerald-400 text-sm font-medium mb-1">🟢 <span id="txt-filter-label-2">전체</span> 총자산</h3>
                 <div class="text-2xl font-bold tracking-tight text-emerald-400 mb-2" id="txt-total-asset">0원</div>
-                <div class="text-xs text-slate-400" id="txt-growth-percent">성장액 실시간 반영</div>
+                <div class="text-xs text-slate-400" id="txt-growth-percent">최초 총자산 대비 변동율</div>
             </div>
 
             <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-md">
@@ -231,9 +231,9 @@
         function loadFromLocalStorage() {
             const data = localStorage.getItem('couple_finance_v5_fixed');
             if (data) {
+                // 기존 데이터 파싱 후 상태 유지
                 state = JSON.parse(data);
                 if (!state.fixedItems) state.fixedItems = [];
-                // 이전 데이터 마이그레이션 (category가 없는 예전 아이템용 보정)
                 state.fixedItems.forEach(item => {
                     if (!item.category) {
                         if (item.type === 'liability') item.category = '부채';
@@ -245,23 +245,18 @@
                 });
                 if (!state.history) state.history = [];
             } else {
+                // 데이터가 아예 없을 때만 초기 샘플 셋업
                 state.fixedItems = [
                     { id: "item1", type: 'asset', category: '부동산', owner: '공동', name: '🏢 아파트 부동산' },
-                    { id: "item2", type: 'liability', category: '부채', owner: '공동', name: '🚨 은행 주담대' },
-                    { id: "item3", type: 'asset', category: '주식', owner: '남편', name: '🇺🇸 미국주식(테슬라/엔비디아)' },
-                    { id: "item4", type: 'asset', category: '현금/예적금', owner: '아내', name: '💵 우리은행 비상금통장' }
+                    { id: "item2", type: 'liability', category: '부채', owner: '공동', name: '🚨 은행 주담대' }
                 ];
-                state.targetAmounts = { '전체': 1000000000, '공동': 700000000, '남편': 200000000, '아내': 100000000 };
-                state.history = [
-                    { month: '2026-04', itemSnapshots: { "item1": 500000000, "item2": 200000000, "item3": 20000000, "item4": 15000000 } },
-                    { month: '2026-05', itemSnapshots: { "item1": 520000000, "item2": 195000000, "item3": 24000000, "item4": 18000000 } }
-                ];
+                state.targetAmounts = { '전체': 1000000000, '공동': 700000000, '남편': 0, '아내': 0 };
+                state.history = [];
                 saveToLocalStorage();
             }
             document.getElementById('input-target-amount').value = state.targetAmounts[currentFilter] || '';
         }
 
-        // 유형 변경 시 부채면 상세분류를 '부채' 고정 처리하는 편의 기능
         function toggleCategorySelect() {
             const type = document.getElementById('form-type').value;
             const catSelect = document.getElementById('form-category');
@@ -437,7 +432,6 @@
                         if (item.type === 'asset') {
                             currentNetAsset += amt;
                             totalAssetSum += amt;
-                            // 매핑 보정 및 카테고리 기반 누적
                             if(categorySums[item.category] !== undefined) {
                                 categorySums[item.category] += amt;
                             } else {
@@ -478,6 +472,19 @@
 
             if (state.history.length > 0) {
                 const firstHist = state.history[0];
+                let firstTotalAsset = 0;
+                state.fixedItems.forEach(item => {
+                    if (currentFilter === '전체' || item.owner === currentFilter) {
+                        if (item.type === 'asset') {
+                            firstTotalAsset += (firstHist.itemSnapshots[item.id] || 0);
+                        }
+                    }
+                });
+                
+                const assetGrowth = totalAssetSum - firstTotalAsset;
+                const assetPct = firstTotalAsset > 0 ? ((assetGrowth / firstTotalAsset) * 100).toFixed(1) : 0;
+                document.getElementById('txt-growth-percent').innerText = `최초 총자산 대비 변동: ${assetPct >= 0 ? '+' : ''}${assetPct}%`;
+
                 let firstNet = 0;
                 state.fixedItems.forEach(item => {
                     if (currentFilter === '전체' || item.owner === currentFilter) {
@@ -489,10 +496,6 @@
                 const usdGrowth = usdNetAsset - firstUsdNet;
                 const usdPct = firstUsdNet > 0 ? ((usdGrowth / firstUsdNet) * 100).toFixed(1) : 0;
                 document.getElementById('txt-usd-growth-percent').innerText = `최초 대비 순 달러 증감: ${usdPct}%`;
-                
-                const assetGrowth = totalAssetSum - firstNet;
-                const assetPct = firstNet > 0 ? ((assetGrowth / firstNet) * 100).toFixed(1) : 0;
-                document.getElementById('txt-growth-percent').innerText = `최초 자산 대비 변동: ${assetPct > 0 ? '+' : ''}${assetPct}%`;
             }
 
             const curTarget = state.targetAmounts[currentFilter] || 0;
@@ -519,7 +522,6 @@
             state.fixedItems.forEach(item => {
                 const tr = document.createElement('tr');
                 const badgeColor = item.owner === '공동' ? 'text-purple-400 bg-purple-950/40' : (item.owner === '남편' ? 'text-teal-400 bg-teal-950/40' : 'text-pink-400 bg-pink-950/40');
-                const typeText = item.type === 'asset' ? '➕ 자산' : '➖ 부채';
                 tr.innerHTML = `
                     <td class="py-2"><span class="px-1.5 py-0.5 rounded text-[10px] ${badgeColor}">${item.owner}</span></td>
                     <td class="py-2 text-[11px] font-bold text-slate-400">${item.category}</td>
@@ -586,6 +588,7 @@
             updateDashboard();
         }
 
+        // ... 하단 핵심 차트 및 데이터 변환 함수 동일 ...
         function saveTargetAmount() {
             state.targetAmounts[currentFilter] = parseInt(document.getElementById('input-target-amount').value) || 0;
             saveToLocalStorage(); updateDashboard();
@@ -679,7 +682,7 @@
                     if (importedState && importedState.fixedItems) {
                         state = importedState; saveToLocalStorage();
                         resetClosingForm(); updateDashboard();
-                        alert('자산 분류 체계 및 데이터가 완벽하게 동기화되었습니다.');
+                        alert('자산 백업 데이터 복구가 완료되었습니다.');
                     } else { alert('유효한 백업 파일이 아닙니다.'); }
                 } catch (e) { alert('파일 읽기 오류'); }
             };
