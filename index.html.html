@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>부부 자산 관리 및 간편 월말 결산 대시보드</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
@@ -13,6 +15,7 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen antialiased">
 
+    <!-- 상단 네비게이션 -->
     <nav class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -39,6 +42,7 @@
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
+        <!-- 소유자별 필터 탭 -->
         <div class="flex justify-start items-center bg-slate-800/50 p-1.5 rounded-xl border border-slate-800 max-w-md">
             <button onclick="setFilter('전체')" id="btn-filter-all" class="flex-1 py-2 text-sm font-medium rounded-lg transition-all text-white bg-indigo-600 shadow cursor-pointer">전체 부부자산</button>
             <button onclick="setFilter('공동')" id="btn-filter-joint" class="flex-1 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-slate-200 cursor-pointer">👥 공동</button>
@@ -46,6 +50,7 @@
             <button onclick="setFilter('아내')" id="btn-filter-wife" class="flex-1 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-slate-200 cursor-pointer">🙋‍♀️ 아내</button>
         </div>
 
+        <!-- 요약 카드 구간 -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div class="bg-gradient-to-br from-indigo-600 to-blue-600 rounded-2xl p-6 shadow-xl">
                 <h3 class="text-indigo-100 text-sm font-medium mb-1"><span id="txt-filter-label-1">우리 부부</span> 순자산</h3>
@@ -56,7 +61,7 @@
             <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-md">
                 <h3 class="text-emerald-400 text-sm font-medium mb-1">🟢 <span id="txt-filter-label-2">전체</span> 총자산</h3>
                 <div class="text-2xl font-bold tracking-tight text-emerald-400 mb-2" id="txt-total-asset">0원</div>
-                <div class="text-xs text-slate-400" id="txt-growth-percent">최초 총자산 대비 변동율</div>
+                <div class="text-xs text-emerald-400/90 font-medium" id="txt-growth-percent">최초 순자산 대비 변동율</div>
             </div>
 
             <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-md">
@@ -72,6 +77,7 @@
             </div>
         </div>
 
+        <!-- 목표 자산 및 달성률 -->
         <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-md">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                 <div>
@@ -93,6 +99,7 @@
             </div>
         </div>
 
+        <!-- 시각화 차트 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-md">
                 <h3 class="text-slate-200 font-semibold text-base mb-4">📊 <span id="txt-chart-label">전체</span> 포트폴리오 비중</h3>
@@ -108,8 +115,36 @@
             </div>
         </div>
 
+        <!-- 연간 자산 증감 분석 섹션 (신설) -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-md">
+            <h3 class="text-slate-200 font-semibold text-base mb-2">📅 연간 순자산 증감 현황 (<span id="txt-yearly-filter-label">전체</span>)</h3>
+            <p class="text-xs text-slate-400 mb-6">매해 최종 마감월 기준 전년 대비 순자산의 누적 변화와 연간 성장폭을 추적합니다.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                <div class="lg:col-span-7 relative h-56 w-full">
+                    <canvas id="yearlyChart"></canvas>
+                </div>
+                <div class="lg:col-span-5 overflow-x-auto text-xs">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-slate-500 border-b border-slate-700">
+                                <th class="pb-2">연도</th>
+                                <th class="pb-2 text-right">기록 시점</th>
+                                <th class="pb-2 text-right">해당 연도 순자산</th>
+                                <th class="pb-2 text-right">연간 증감액</th>
+                            </tr>
+                        </thead>
+                        <tbody id="yearly-summary-tbody" class="text-slate-300 divide-y divide-slate-800">
+                            <!-- 동적 생성 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 메인 하단 구역 -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
+            <!-- 왼쪽: 금액 입력마감 매니저 -->
             <div class="lg:col-span-7 space-y-6">
                 <div class="bg-gradient-to-br from-slate-800 to-slate-850 border border-indigo-500/30 rounded-2xl p-6 shadow-xl space-y-4">
                     <div class="flex items-center justify-between border-b border-slate-700/60 pb-3">
@@ -138,6 +173,7 @@
                 </div>
             </div>
 
+            <!-- 오른쪽: 고정 품목 관리 대장 -->
             <div class="lg:col-span-5 space-y-6">
                 <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-md">
                     <h3 class="text-slate-200 font-semibold text-base mb-2">⚙️ [기본 셋업] 우리집 고정 품목 등록</h3>
@@ -179,6 +215,7 @@
                         </button>
                     </div>
 
+                    <!-- 마스터 품목 리스트 -->
                     <div class="mt-5 border-t border-slate-700/60 pt-4">
                         <span class="text-xs text-slate-400 font-semibold block mb-2">📋 등록된 마스터 품목 리스트</span>
                         <div class="overflow-x-auto text-xs max-h-48 overflow-y-auto">
@@ -215,6 +252,7 @@
         let currentFilter = '전체'; 
         let assetChartInstance = null;
         let trendChartInstance = null;
+        let yearlyChartInstance = null;
         let selectedEditMonth = null; 
 
         window.onload = function() {
@@ -231,7 +269,6 @@
         function loadFromLocalStorage() {
             const data = localStorage.getItem('couple_finance_v5_fixed');
             if (data) {
-                // 기존 데이터 파싱 후 상태 유지
                 state = JSON.parse(data);
                 if (!state.fixedItems) state.fixedItems = [];
                 state.fixedItems.forEach(item => {
@@ -245,7 +282,6 @@
                 });
                 if (!state.history) state.history = [];
             } else {
-                // 데이터가 아예 없을 때만 초기 샘플 셋업
                 state.fixedItems = [
                     { id: "item1", type: 'asset', category: '부동산', owner: '공동', name: '🏢 아파트 부동산' },
                     { id: "item2", type: 'liability', category: '부채', owner: '공동', name: '🚨 은행 주담대' }
@@ -453,6 +489,32 @@
             const usdNetAsset = currentNetAsset / rate;
             document.getElementById('txt-usd-net-asset').innerText = '$' + usdNetAsset.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
+            // [A안 반영] 상단 녹색 총자산 카드의 하단 라벨을 "최초 순자산 대비 변동률 및 증감액"으로 변환
+            const growthEl = document.getElementById('txt-growth-percent');
+            if (state.history.length > 0) {
+                const firstHist = state.history[0];
+                let firstNetAsset = 0;
+                state.fixedItems.forEach(item => {
+                    if (currentFilter === '전체' || item.owner === currentFilter) {
+                        const amt = firstHist.itemSnapshots[item.id] || 0;
+                        firstNetAsset += (item.type === 'asset' ? amt : -amt);
+                    }
+                });
+                
+                const netGrowthAmt = currentNetAsset - firstNetAsset;
+                const netGrowthPct = firstNetAsset > 0 ? ((netGrowthAmt / firstNetAsset) * 100).toFixed(1) : 0;
+                
+                growthEl.className = `text-xs font-semibold ${netGrowthAmt >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+                growthEl.innerText = `최초 순자산 대비: ${netGrowthAmt >= 0 ? '▲' : '▼'} ${netGrowthPct}% (+${netGrowthAmt.toLocaleString()}원)`;
+                
+                // 달러 가치 증감율 보정
+                const firstUsdNet = firstNetAsset / rate;
+                const usdGrowth = usdNetAsset - firstUsdNet;
+                const usdPct = firstUsdNet > 0 ? ((usdGrowth / firstUsdNet) * 100).toFixed(1) : 0;
+                document.getElementById('txt-usd-growth-percent').innerText = `최초 대비 순 달러 증감: ${usdPct}%`;
+            }
+
+            // 전월비 변동액
             const momEl = document.getElementById('txt-mom-change');
             if (state.history.length > 1) {
                 const prevHist = state.history[state.history.length - 2];
@@ -464,38 +526,10 @@
                     }
                 });
                 const diff = currentNetAsset - prevNet;
-                momEl.className = `text-xs font-semibold ${diff >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+                momEl.className = `text-xs font-semibold ${diff >= 0 ? 'text-indigo-200' : 'text-rose-300'}`;
                 momEl.innerText = `전월비 ${diff >= 0 ? '▲' : '▼'} ${Math.abs(diff).toLocaleString()}원`;
             } else {
                 momEl.innerText = "비교 데이터 축적 중";
-            }
-
-            if (state.history.length > 0) {
-                const firstHist = state.history[0];
-                let firstTotalAsset = 0;
-                state.fixedItems.forEach(item => {
-                    if (currentFilter === '전체' || item.owner === currentFilter) {
-                        if (item.type === 'asset') {
-                            firstTotalAsset += (firstHist.itemSnapshots[item.id] || 0);
-                        }
-                    }
-                });
-                
-                const assetGrowth = totalAssetSum - firstTotalAsset;
-                const assetPct = firstTotalAsset > 0 ? ((assetGrowth / firstTotalAsset) * 100).toFixed(1) : 0;
-                document.getElementById('txt-growth-percent').innerText = `최초 총자산 대비 변동: ${assetPct >= 0 ? '+' : ''}${assetPct}%`;
-
-                let firstNet = 0;
-                state.fixedItems.forEach(item => {
-                    if (currentFilter === '전체' || item.owner === currentFilter) {
-                        const amt = firstHist.itemSnapshots[item.id] || 0;
-                        firstNet += (item.type === 'asset' ? amt : -amt);
-                    }
-                });
-                const firstUsdNet = firstNet / rate;
-                const usdGrowth = usdNetAsset - firstUsdNet;
-                const usdPct = firstUsdNet > 0 ? ((usdGrowth / firstUsdNet) * 100).toFixed(1) : 0;
-                document.getElementById('txt-usd-growth-percent').innerText = `최초 대비 순 달러 증감: ${usdPct}%`;
             }
 
             const curTarget = state.targetAmounts[currentFilter] || 0;
@@ -514,6 +548,7 @@
             renderHistoryLog();
             updateDoughnutChart(categorySums, totalAssetSum, totalLiabilitySum);
             updateLineChart();
+            updateYearlySection(); // 연간 분석 갱신
         }
 
         function renderMasterItemsTable() {
@@ -563,6 +598,82 @@
             });
         }
 
+        // 연간 데이터 집계 및 차트화 로직
+        function updateYearlySection() {
+            if (!yearlyChartInstance) return;
+
+            // 1. 연도별 마지막 마감 데이터 추출
+            let yearlyMap = {};
+            state.history.forEach(h => {
+                const year = h.month.split('-')[0];
+                // 기록이 순차적이므로 덮어쓰며 해당 년도의 마지막 데이터가 최종 저장됨
+                yearlyMap[year] = h;
+            });
+
+            const sortedYears = Object.keys(yearlyMap).sort();
+            let labels = [];
+            let netAssets = [];
+            let changes = [];
+            
+            let tableTbody = document.getElementById('yearly-summary-tbody');
+            tableTbody.innerHTML = '';
+
+            sortedYears.forEach((year, idx) => {
+                const currentHist = yearlyMap[year];
+                
+                // 순자산 계산
+                let currentNet = 0;
+                state.fixedItems.forEach(item => {
+                    if (currentFilter === '전체' || item.owner === currentFilter) {
+                        const amt = currentHist.itemSnapshots[item.id] || 0;
+                        currentNet += (item.type === 'asset' ? amt : -amt);
+                    }
+                });
+
+                // 전년도 대비 변동액 계산
+                let changeAmt = 0;
+                if (idx > 0) {
+                    const prevHist = yearlyMap[sortedYears[idx - 1]];
+                    let prevNet = 0;
+                    state.fixedItems.forEach(item => {
+                        if (currentFilter === '전체' || item.owner === currentFilter) {
+                            const amt = prevHist.itemSnapshots[item.id] || 0;
+                            prevNet += (item.type === 'asset' ? amt : -amt);
+                        }
+                    });
+                    changeAmt = currentNet - prevNet;
+                } else {
+                    changeAmt = 0; // 첫 기록 연도는 기준점 0
+                }
+
+                labels.push(year + '년');
+                netAssets.push(currentNet);
+                changes.push(changeAmt);
+
+                // 테이블 렌더링
+                const tr = document.createElement('tr');
+                const badgeColor = changeAmt >= 0 ? 'text-emerald-400' : 'text-rose-400';
+                const sign = changeAmt > 0 ? '+' : '';
+                
+                tr.innerHTML = `
+                    <td class="py-2.5 font-bold text-slate-200">${year}년</td>
+                    <td class="py-2.5 text-right text-slate-500 text-[11px]">${currentHist.month} 마감기준</td>
+                    <td class="py-2.5 text-right font-semibold text-slate-300">${currentNet.toLocaleString()}원</td>
+                    <td class="py-2.5 text-right font-bold ${badgeColor}">${idx === 0 ? '-' : sign + changeAmt.toLocaleString() + '원'}</td>
+                `;
+                tableTbody.appendChild(tr);
+            });
+
+            if(sortedYears.length === 0) {
+                tableTbody.innerHTML = `<tr><td colspan="4" class="text-slate-500 italic py-4 text-center">연간 데이터 집계를 위한 히스토리가 부족합니다.</td></tr>`;
+            }
+
+            // 2. 바 차트 업데이트 (연간 증감액 시각화)
+            yearlyChartInstance.data.labels = labels;
+            yearlyChartInstance.data.datasets[0].data = changes;
+            yearlyChartInstance.update();
+        }
+
         function setFilter(filterName) {
             currentFilter = filterName;
             const filters = ['all', 'joint', 'husband', 'wife'];
@@ -583,12 +694,12 @@
             document.getElementById('txt-target-filter-label').innerText = filterName;
             document.getElementById('txt-chart-label').innerText = filterName;
             document.getElementById('txt-trend-filter-label').innerText = filterName;
+            document.getElementById('txt-yearly-filter-label').innerText = filterName;
             document.getElementById('input-target-amount').value = state.targetAmounts[currentFilter] || '';
             
             updateDashboard();
         }
 
-        // ... 하단 핵심 차트 및 데이터 변환 함수 동일 ...
         function saveTargetAmount() {
             state.targetAmounts[currentFilter] = parseInt(document.getElementById('input-target-amount').value) || 0;
             saveToLocalStorage(); updateDashboard();
@@ -614,6 +725,35 @@
                     plugins: { legend: { display: false } },
                     scales: {
                         x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', font: { size: 10 } } },
+                        y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', font: { size: 10 }, callback: function(v) { return (v/10000).toLocaleString() + '만'; } } }
+                    }
+                }
+            });
+
+            // 연간 증감용 막대그래프 초기화
+            const ctxYearly = document.getElementById('yearlyChart').getContext('2d');
+            yearlyChartInstance = new Chart(ctxYearly, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '연간 순자산 증감폭',
+                        data: [],
+                        backgroundColor: function(context) {
+                            const index = context.dataIndex;
+                            const value = context.dataset.data[index];
+                            return value >= 0 ? 'rgba(16, 185, 129, 0.75)' : 'rgba(244, 63, 94, 0.75)'; // 양수 녹색, 음수 적색
+                        },
+                        borderRadius: 6,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11, weight: 'bold' } } },
                         y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', font: { size: 10 }, callback: function(v) { return (v/10000).toLocaleString() + '만'; } } }
                     }
                 }
